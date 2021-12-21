@@ -9,7 +9,8 @@ config_path = "yolov4-tiny.cfg"
 while True:
     status, image = cap.read()
     H, W, chanels = image.shape
-    print(H, W, chanels)
+    blob = cv2.dnn.blobFromImage(image, 1 / 255.0, (256, 256), swapRB=True)
+    print(blob.shape)
     if not status:
         break
     cv2.imshow("Detection", image)
