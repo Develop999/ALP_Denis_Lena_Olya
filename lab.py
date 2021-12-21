@@ -6,6 +6,12 @@ classes_path = "coco.names"
 classes = open(classes_path).read().strip().split("\n")
 weights_path = "yolov4-tiny.weights"
 config_path = "yolov4-tiny.cfg"
+model = cv2.dnn.readNet(config_path, weights_path)
+layer_name = model.getLayerNames()
+print(layer_name)
+layer_name = [layer_name[i-1] for i in model.getUnconnectedOutLayers()]
+print(layer_name)
+
 while True:
     status, image = cap.read()
     H, W, chanels = image.shape
