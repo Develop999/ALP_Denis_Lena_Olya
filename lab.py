@@ -2,6 +2,10 @@ import numpy as np
 import cv2
 
 cap = cv2.VideoCapture('olya.mp4')
+classes_path = "coco.names"
+classes = open(classes_path).read().strip().split("\n")
+weights_path = "yolov4-tiny.weights"
+config_path = "yolov4-tiny.cfg"
 while True:
     status, image = cap.read()
     H, W, chanels = image.shape
