@@ -14,8 +14,8 @@ while True:
     status, image = cap.read()
     if not status:
         break
-    H, W, chanels = image.shape
-    blob = cv2.dnn.blobFromImage(image, 1 / 255.0, (256, 256), swapRB=True)
+    H, W, _ = image.shape
+    blob = cv2.dnn.blobFromImage(image, 1 / 255.0, (256, 256), swapRB=True, crop=False)
     model.setInput(blob)
     layerOutputs = model.forward(layer_name)
     boxes = []
@@ -25,15 +25,13 @@ while True:
             scores = detection[5:]
             classID = np.argmax(scores)
             confidence = scores[classID]
-            b1 = detection[0] * W
-            b2 = detection[1] * H
-            b3 = detection[2] * W
-            b4 = detection[3] * H
-            x = int(b1 - (b3 / 2))
-            y = int(b2 - (b4 / 2))
-            boxes.append([x, y, b3, b4])
+            box = detection[0:4] * np.array([W, H, W, H])
+            (centerX, centerY, width, height) = box
+            x = int(centerX - (width / 2))
+            y = int(centerY - (height / 2))
+            boxes.append([x, y, int(width), int(height)])
             confidences.append(float(confidence))
-
+    idzs = cv2.dnn.NMSBoxes(boxes, confidences, 0.7, 0.8)
     if not status:
         break
     cv2.imshow("Detection", image)
