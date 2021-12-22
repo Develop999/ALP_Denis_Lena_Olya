@@ -12,13 +12,17 @@ layer_name = [layer_name[i - 1] for i in model.getUnconnectedOutLayers()]
 
 while True:
     status, image = cap.read()
+    if not status:
+        break
     H, W, chanels = image.shape
     blob = cv2.dnn.blobFromImage(image, 1 / 255.0, (256, 256), swapRB=True)
     model.setInput(blob)
     layerOutputs = model.forward(layer_name)
-    print(len(layerOutputs))
-    if not status:
-        break
+    for output in layerOutputs:
+        for detection in output:
+            scores = detection[5:]
+            classID = np.argmax(scores)
+            confidence = scores[classID]
     cv2.imshow("Detection", image)
     if cv2.waitKey(0):
         break
