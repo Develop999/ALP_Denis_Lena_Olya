@@ -8,15 +8,15 @@ weights_path = "yolov4-tiny.weights"
 config_path = "yolov4-tiny.cfg"
 model = cv2.dnn.readNet(config_path, weights_path)
 layer_name = model.getLayerNames()
-print(layer_name)
-layer_name = [layer_name[i-1] for i in model.getUnconnectedOutLayers()]
-print(layer_name)
+layer_name = [layer_name[i - 1] for i in model.getUnconnectedOutLayers()]
 
 while True:
     status, image = cap.read()
     H, W, chanels = image.shape
     blob = cv2.dnn.blobFromImage(image, 1 / 255.0, (256, 256), swapRB=True)
-    print(blob.shape)
+    model.setInput(blob)
+    layerOutputs = model.forward(layer_name)
+    print(len(layerOutputs))
     if not status:
         break
     cv2.imshow("Detection", image)
