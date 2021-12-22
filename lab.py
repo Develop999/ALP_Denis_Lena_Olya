@@ -32,8 +32,10 @@ while True:
             boxes.append([x, y, int(width), int(height)])
             confidences.append(float(confidence))
     idzs = cv2.dnn.NMSBoxes(boxes, confidences, 0.7, 0.8)
-    if not status:
-        break
+    for i in idzs:
+        x, y, w, h = boxes[i]
+        res = (confidences[i], (x, y), (x + w, y + h))
+        
     cv2.imshow("Detection", image)
     if cv2.waitKey(1) == 27:
         break
