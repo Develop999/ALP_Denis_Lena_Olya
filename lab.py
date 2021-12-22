@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 
-cap = cv2.VideoCapture('olya.mp4')
+cap = cv2.VideoCapture('lena.mp4')
 classes_path = "coco.names"
 classes = open(classes_path).read().strip().split("\n")
 weights_path = "yolov4-tiny.weights"
@@ -18,6 +18,7 @@ while True:
     blob = cv2.dnn.blobFromImage(image, 1 / 255.0, (256, 256), swapRB=True, crop=False)
     model.setInput(blob)
     layerOutputs = model.forward(layer_name)
+    results = []
     boxes = []
     confidences = []
     for output in layerOutputs:
@@ -35,7 +36,8 @@ while True:
     for i in idzs:
         x, y, w, h = boxes[i]
         res = (confidences[i], (x, y), (x + w, y + h))
-        
+        results.append(res)
+
     cv2.imshow("Detection", image)
     if cv2.waitKey(1) == 27:
         break
