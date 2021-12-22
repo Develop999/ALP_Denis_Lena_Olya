@@ -10,12 +10,10 @@ model = cv2.dnn.readNet(config_path, weights_path)
 layer_name = model.getLayerNames()
 layer_name = [layer_name[i - 1] for i in model.getUnconnectedOutLayers()]
 
-while True:
-    status, image = cap.read()
-    if not status:
-        break
-    H, W, _ = image.shape
-    blob = cv2.dnn.blobFromImage(image, 1 / 255.0, (320, 320), swapRB=True, crop=False)
+
+def pedestrian_detection(img, model, layer_name, id):
+    H, W, _ = img.shape
+    blob = cv2.dnn.blobFromImage(img, 1 / 255.0, (320, 320), swapRB=True, crop=False)
     model.setInput(blob)
     layerOutputs = model.forward(layer_name)
     results = []
@@ -37,9 +35,16 @@ while True:
         x, y, w, h = boxes[i]
         res = (confidences[i], (x, y), (x + w, y + h))
         results.append(res)
+    return results
+
+
+while True:
+    status, image = cap.read()
+    if not status:
+        break
+    results = pedestrian_detection(image, model, layer_name, 0)
     for res in results:
         cv2.rectangle(image, res[1], res[2], (0, 255, 0), 2)
-
     cv2.imshow("Detection", image)
     if cv2.waitKey(1) == 27:
         break
