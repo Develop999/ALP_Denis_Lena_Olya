@@ -1,10 +1,9 @@
 import numpy as np
 import cv2
 
-
 def pedestrian_detection(img, model, layer_name, personid):
     H, W, _ = img.shape
-    blob = cv2.dnn.blobFromImage(img, 1 / 255.0, (416, 416), swapRB=True, crop=False)
+    blob = cv2.dnn.blobFromImage(img, 1 / 255.0, (320, 320), swapRB=True, crop=False)
     model.setInput(blob)
     layerOutputs = model.forward(layer_name)
     results = []
@@ -19,6 +18,7 @@ def pedestrian_detection(img, model, layer_name, personid):
             (centerX, centerY, width, height) = box
             x = int(centerX - (width / 2))
             y = int(centerY - (height / 2))
+
             boxes.append([x, y, int(width), int(height)])
             confidences.append(float(confidence))
     idzs = cv2.dnn.NMSBoxes(boxes, confidences, 0.25, 0.6)
@@ -30,7 +30,7 @@ def pedestrian_detection(img, model, layer_name, personid):
     return results
 
 
-cap = cv2.VideoCapture('olya.mp4')
+cap = cv2.VideoCapture(0)
 classes_path = "coco.names"
 classes = open(classes_path).read().strip().split("\n")
 weights_path = "yolov4-tiny.weights"
