@@ -23,8 +23,17 @@ while True:
             scores = detection[5:]
             classID = np.argmax(scores)
             confidence = scores[classID]
+            b1 = detection[0]*W
+            b2 = detection[1]*H
+            b3 = detection[2] * W
+            b4 = detection[3] * H
+            x = int(b1 - (b3 / 2))
+            y = int(b2 - (b4 / 2))
+
+    if not status:
+        break
     cv2.imshow("Detection", image)
-    if cv2.waitKey(0):
+    if cv2.waitKey(1) == 27:
         break
 
 cap.release()
