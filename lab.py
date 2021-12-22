@@ -18,17 +18,21 @@ while True:
     blob = cv2.dnn.blobFromImage(image, 1 / 255.0, (256, 256), swapRB=True)
     model.setInput(blob)
     layerOutputs = model.forward(layer_name)
+    boxes = []
+    confidences = []
     for output in layerOutputs:
         for detection in output:
             scores = detection[5:]
             classID = np.argmax(scores)
             confidence = scores[classID]
-            b1 = detection[0]*W
-            b2 = detection[1]*H
+            b1 = detection[0] * W
+            b2 = detection[1] * H
             b3 = detection[2] * W
             b4 = detection[3] * H
             x = int(b1 - (b3 / 2))
             y = int(b2 - (b4 / 2))
+            boxes.append([x, y, b3, b4])
+            confidences.append(float(confidence))
 
     if not status:
         break
