@@ -1,10 +1,10 @@
 import numpy as np
 import cv2
 import imutils
+import time
 
 NMS_THRESHOLD = 0.25
 MIN_CONFIDENCE = 0.5
-
 
 def pedestrian_detection(img, model, layer_name, personid):
     H, W, _ = img.shape
@@ -24,6 +24,7 @@ def pedestrian_detection(img, model, layer_name, personid):
                 (centerX, centerY, width, height) = box
                 x = int(centerX - (width / 2))
                 y = int(centerY - (height / 2))
+
                 boxes.append([x, y, int(width), int(height)])
                 confidences.append(float(confidence))
     idzs = cv2.dnn.NMSBoxes(boxes, confidences, MIN_CONFIDENCE, NMS_THRESHOLD)
@@ -47,12 +48,16 @@ layer_name = model.getLayerNames()
 layer_name = [layer_name[i - 1] for i in model.getUnconnectedOutLayers()]
 
 while True:
+    start = time.time()
     status, image = cap.read()
     if not status:
         break
     results = pedestrian_detection(image, model, layer_name, classes.index("person"))
     for res in results:
         cv2.rectangle(image, res[1], res[2], (0, 255, 0), 2)
+    seconds = time.time() - start
+    fps = 1 / seconds
+    print(fps)
     image = imutils.resize(image, width=1280)  # сохраняет пропорции в отличие от cv2.resize
     cv2.imshow("Detection", image)
     out.write(image)
