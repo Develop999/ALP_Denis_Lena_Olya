@@ -1,12 +1,16 @@
 import numpy as np
 import cv2
 
+NMS_THRESHOLD = 0.25
+MIN_CONFIDENCE = 0.75
+
+
 def pedestrian_detection(img, model, layer_name, personid):
     H, W, _ = img.shape
-    blob = cv2.dnn.blobFromImage(img, 1 / 255.0, (320, 320), swapRB=True, crop=False)
+    results = []
+    blob = cv2.dnn.blobFromImage(img, 1 / 255.0, (256, 256), swapRB=True, crop=False)
     model.setInput(blob)
     layerOutputs = model.forward(layer_name)
-    results = []
     boxes = []
     confidences = []
     for output in layerOutputs:
@@ -14,14 +18,14 @@ def pedestrian_detection(img, model, layer_name, personid):
             scores = detection[5:]
             classID = np.argmax(scores)
             confidence = scores[classID]
-            box = detection[0:4] * np.array([W, H, W, H])
-            (centerX, centerY, width, height) = box
-            x = int(centerX - (width / 2))
-            y = int(centerY - (height / 2))
-
-            boxes.append([x, y, int(width), int(height)])
-            confidences.append(float(confidence))
-    idzs = cv2.dnn.NMSBoxes(boxes, confidences, 0.25, 0.6)
+            if classID == personid and confidence > MIN_CONFIDENCE:
+                box = detection[0:4] * np.array([W, H, W, H])
+                (centerX, centerY, width, height) = box
+                x = int(centerX - (width / 2))
+                y = int(centerY - (height / 2))
+                boxes.append([x, y, int(width), int(height)])
+                confidences.append(float(confidence))
+    idzs = cv2.dnn.NMSBoxes(boxes, confidences, MIN_CONFIDENCE, NMS_THRESHOLD)
     if len(idzs):
         for i in idzs:
             x, y, w, h = boxes[i]
@@ -30,11 +34,13 @@ def pedestrian_detection(img, model, layer_name, personid):
     return results
 
 
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture('olya.mp4')
 classes_path = "coco.names"
 classes = open(classes_path).read().strip().split("\n")
 weights_path = "yolov4-tiny.weights"
 config_path = "yolov4-tiny.cfg"
+fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+out = cv2.VideoWriter('captured.mp4', fourcc, 24, (1280, 720))
 model = cv2.dnn.readNet(config_path, weights_path)
 layer_name = model.getLayerNames()
 layer_name = [layer_name[i - 1] for i in model.getUnconnectedOutLayers()]
