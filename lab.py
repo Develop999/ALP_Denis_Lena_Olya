@@ -3,8 +3,9 @@ import cv2
 import imutils
 import time
 
-NMS_THRESHOLD = 0.25
-MIN_CONFIDENCE = 0.5
+NMS_THRESHOLD = 0.3
+MIN_CONFIDENCE = 0.7
+
 
 def pedestrian_detection(img, model, layer_name, personid):
     H, W, _ = img.shape
@@ -57,7 +58,8 @@ while True:
         cv2.rectangle(image, res[1], res[2], (0, 255, 0), 2)
     seconds = time.time() - start
     fps = 1 / seconds
-    print(fps)
+    fps = round(fps, 2)
+    cv2.putText(image, str(fps), (5, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (100, 255, 0), 2, cv2.LINE_AA)
     image = imutils.resize(image, width=1280)  # сохраняет пропорции в отличие от cv2.resize
     cv2.imshow("Detection", image)
     out.write(image)
