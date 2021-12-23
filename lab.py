@@ -1,8 +1,9 @@
 import numpy as np
 import cv2
+import imutils
 
 NMS_THRESHOLD = 0.25
-MIN_CONFIDENCE = 0.75
+MIN_CONFIDENCE = 0.5
 
 
 def pedestrian_detection(img, model, layer_name, personid):
@@ -52,9 +53,12 @@ while True:
     results = pedestrian_detection(image, model, layer_name, classes.index("person"))
     for res in results:
         cv2.rectangle(image, res[1], res[2], (0, 255, 0), 2)
+    image = imutils.resize(image, width=1280)  # сохраняет пропорции в отличие от cv2.resize
     cv2.imshow("Detection", image)
+    out.write(image)
     if cv2.waitKey(1) == 27:
         break
 
+out.release()
 cap.release()
 cv2.destroyAllWindows()
