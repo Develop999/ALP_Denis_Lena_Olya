@@ -7,7 +7,7 @@ NMS_THRESHOLD = 0.3
 MIN_CONFIDENCE = 0.7
 
 def check_intersection(el, rect):
-    for (ax1, ay1, ax2, ay2) in rect:
+    for (ax1, ay1, ax2, ay2) in el:
         break
     ax2 += ax1
     ay2 += ay1
@@ -20,7 +20,7 @@ def check_intersection(el, rect):
     s1 = (ax1 >= bx1 and ax1 <=bx2) or (ax2 >= bx1 and ax2 <= bx2)
     s2 = (ay1 >= by1 and ay1 <= by2) or (ay2 >= by1 and ay2 <= by2)
     s3 = (bx1 >= ax1 and bx1 <= ax2) or (bx2 >= ax1 and bx2 <= ax2)
-    s4 = (ax1 >= bx1 and ax1 <= bx2) or (by2 >= ay1 and by2 <= ay2)
+    s4 = (by1 >= ay1 and by1 <= ay2) or (by2 >= ay1 and by2 <= ay2)
 
     if ((s1 and s2) or (s3 and s4)) or ((s1 and s4) or (s3 and s2)):
         return True
@@ -30,11 +30,11 @@ def check_intersection(el, rect):
 def pedestrian_detection(img, model, layer_name, personid):
     H, W, _ = img.shape
     results = []
+    boxes = []
+    confidences = []
     blob = cv2.dnn.blobFromImage(img, 1 / 255.0, (256, 256), swapRB=True, crop=False)
     model.setInput(blob)
     layerOutputs = model.forward(layer_name)
-    boxes = []
-    confidences = []
     for output in layerOutputs:
         for detection in output:
             scores = detection[5:]
@@ -67,6 +67,7 @@ out = cv2.VideoWriter('captured.mp4', fourcc, 24, (1280, 720))
 model = cv2.dnn.readNet(config_path, weights_path)
 layer_name = model.getLayerNames()
 layer_name = [layer_name[i - 1] for i in model.getUnconnectedOutLayers()]
+zona = np.array([[255, 250, 305, 300]])
 
 while True:
     start = time.time()
@@ -74,6 +75,8 @@ while True:
     if not status:
         break
     results = pedestrian_detection(image, model, layer_name, classes.index("person"))
+    for (x, y, w, h) in zona:
+        cv2.rectangle(image, (x, y), (x + w, y + h), (255, 0, 0), 2)
     for res in results:
         cv2.rectangle(image, res[1], res[2], (0, 255, 0), 2)
     seconds = time.time() - start
