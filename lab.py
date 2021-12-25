@@ -1,11 +1,10 @@
 import numpy as np
 import cv2
-import imutils
 import time
 
 NMS_THRESHOLD = 0.25
 MIN_CONFIDENCE = 0.5
-
+zona = np.array([[200, 300, 500, 600]])
 
 def check_intersection(body, rect):
     for (ax1, ay1, ax2, ay2) in body:
@@ -13,8 +12,6 @@ def check_intersection(body, rect):
 
     for (bx1, by1, bx2, by2) in rect:
         break
-    bx2 += bx1
-    by2 += by1
 
     s1 = (ax1 >= bx1 and ax1 <= bx2) or (ax2 >= bx1 and ax2 <= bx2)
     s2 = (ay1 >= by1 and ay1 <= by2) or (ay2 >= by1 and ay2 <= by2)
@@ -39,15 +36,15 @@ def pedestrian_detection(img, model, layer_name, personid):
         for detection in output:
             scores = detection[5:]
             classID = np.argmax(scores)
-            confidence = scores[classID]
+            confidence = detection[4] * scores[classID]
             if classID == personid and confidence > MIN_CONFIDENCE:
                 box = detection[0:4] * np.array([W, H, W, H])
                 (centerX, centerY, width, height) = box
                 x = int(centerX - (width / 2))
                 y = int(centerY - (height / 2))
-
                 boxes.append([x, y, int(width), int(height)])
                 confidences.append(float(confidence))
+
     idzs = cv2.dnn.NMSBoxes(boxes, confidences, MIN_CONFIDENCE, NMS_THRESHOLD)
     if len(idzs):
         for i in idzs:
@@ -56,45 +53,47 @@ def pedestrian_detection(img, model, layer_name, personid):
             results.append(res)
     return results
 
-
-cap = cv2.VideoCapture('olya.mp4')
 classes_path = "coco.names"
 classes = open(classes_path).read().strip().split("\n")
 weights_path = "yolov4-tiny.weights"
 config_path = "yolov4-tiny.cfg"
+
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 out = cv2.VideoWriter('captured.mp4', fourcc, 24, (1280, 720))
+
+cap = cv2.VideoCapture('olya.mp4')
+
 model = cv2.dnn.readNet(config_path, weights_path)
 layer_name = model.getLayerNames()
 layer_name = [layer_name[i - 1] for i in model.getUnconnectedOutLayers()]
-zona = np.array([[200, 300, 305, 300]])
+
+cap = cv2.VideoCapture('olya.mp4')
 
 while True:
     start = time.time()
     status, image = cap.read()
     if not status:
         break
+    image = cv2.resize(image, (1280, 720))
     results = pedestrian_detection(image, model, layer_name, classes.index("person"))
-    for (x, y, w, h) in zona:
-        cv2.rectangle(image, (x, y), (x + w, y + h), (255, 0, 0), 2)
+    for (x1, y1, x2, y2) in zona:
+        cv2.rectangle(image, (x1, y1), (x2, y2), (255, 0, 0), 2)
     for res in results:
         if len(results):
             x1, y1 = res[1]
             x2, y2 = res[2]
-            body = np.array([[x1, y1, x2, y2]])
-            if check_intersection(body, zona):
+            if check_intersection([res[1] + res[2]], zona):
                 cv2.rectangle(image, res[1], res[2], (0, 0, 255), 2)
-                else:
+            else:
                 cv2.rectangle(image, res[1], res[2], (0, 255, 0), 2)
-seconds = time.time() - start
-fps = 1 / seconds
-fps = round(fps, 2)
-cv2.putText(image, str(fps), (5, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (100, 255, 0), 2, cv2.LINE_AA)
-image = imutils.resize(image, width=1280)
-cv2.imshow("Detection", image)
-out.write(image)
-if cv2.waitKey(1) == 27:
-    break
+    seconds = time.time() - start
+    fps = 1 / seconds
+    fps = round(fps, 2)
+    cv2.putText(image, str(fps), (5, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (100, 255, 0), 2, cv2.LINE_AA)
+    cv2.imshow("Detection", image)
+    out.write(image)
+    if cv2.waitKey(1) == 27:
+        break
 
 out.release()
 cap.release()
