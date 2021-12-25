@@ -10,8 +10,6 @@ MIN_CONFIDENCE = 0.7
 def check_intersection(el, rect):
     for (ax1, ay1, ax2, ay2) in el:
         break
-    ax2 += ax1
-    ay2 += ay1
 
     for (bx1, by1, bx2, by2) in rect:
         break
@@ -54,7 +52,7 @@ def pedestrian_detection(img, model, layer_name, personid):
     if len(idzs):
         for i in idzs:
             x, y, w, h = boxes[i]
-            res = (confidences[i], (x, y), (w, h))
+            res = (confidences[i], (x, y), (x + w, y + h))
             results.append(res)
     return results
 
@@ -81,9 +79,9 @@ while True:
         cv2.rectangle(image, (x, y), (x + w, y + h), (255, 0, 0), 2)
     for res in results:
         if len(results):
-            x, y = res[1]
-            w, h = res[2]
-            body = np.array([[x, y, w, h]])
+            x1, y1 = res[1]
+            x2, y2 = res[2]
+            body = np.array([[x1, y1, x2, y2]])
             if check_intersection(body, zona):
                 cv2.rectangle(image, (x, y), (x + w, y + h), (0, 0, 255), 2)
             else:
