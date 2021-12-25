@@ -3,12 +3,12 @@ import cv2
 import imutils
 import time
 
-NMS_THRESHOLD = 0.3
-MIN_CONFIDENCE = 0.7
+NMS_THRESHOLD = 0.25
+MIN_CONFIDENCE = 0.5
 
 
-def check_intersection(el, rect):
-    for (ax1, ay1, ax2, ay2) in el:
+def check_intersection(body, rect):
+    for (ax1, ay1, ax2, ay2) in body:
         break
 
     for (bx1, by1, bx2, by2) in rect:
@@ -32,7 +32,7 @@ def pedestrian_detection(img, model, layer_name, personid):
     results = []
     boxes = []
     confidences = []
-    blob = cv2.dnn.blobFromImage(img, 1 / 255.0, (256, 256), swapRB=True, crop=False)
+    blob = cv2.dnn.blobFromImage(img, 0.00392, (320, 320), swapRB=True, crop=False)
     model.setInput(blob)
     layerOutputs = model.forward(layer_name)
     for output in layerOutputs:
@@ -67,7 +67,7 @@ out = cv2.VideoWriter('captured.mp4', fourcc, 24, (1280, 720))
 model = cv2.dnn.readNet(config_path, weights_path)
 layer_name = model.getLayerNames()
 layer_name = [layer_name[i - 1] for i in model.getUnconnectedOutLayers()]
-zona = np.array([[255, 250, 305, 300]])
+zona = np.array([[200, 300, 305, 300]])
 
 while True:
     start = time.time()
@@ -83,18 +83,18 @@ while True:
             x2, y2 = res[2]
             body = np.array([[x1, y1, x2, y2]])
             if check_intersection(body, zona):
-                cv2.rectangle(image, (x, y), (x + w, y + h), (0, 0, 255), 2)
-            else:
-                cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
-    seconds = time.time() - start
-    fps = 1 / seconds
-    fps = round(fps, 2)
-    cv2.putText(image, str(fps), (5, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (100, 255, 0), 2, cv2.LINE_AA)
-    image = imutils.resize(image, width=1280)
-    cv2.imshow("Detection", image)
-    out.write(image)
-    if cv2.waitKey(1) == 27:
-        break
+                cv2.rectangle(image, res[1], res[2], (0, 0, 255), 2)
+                else:
+                cv2.rectangle(image, res[1], res[2], (0, 255, 0), 2)
+seconds = time.time() - start
+fps = 1 / seconds
+fps = round(fps, 2)
+cv2.putText(image, str(fps), (5, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (100, 255, 0), 2, cv2.LINE_AA)
+image = imutils.resize(image, width=1280)
+cv2.imshow("Detection", image)
+out.write(image)
+if cv2.waitKey(1) == 27:
+    break
 
 out.release()
 cap.release()
