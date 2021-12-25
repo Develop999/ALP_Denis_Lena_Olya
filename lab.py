@@ -29,6 +29,7 @@ def pedestrian_detection(img, model, layer_name, personid):
     results = []
     boxes = []
     confidences = []
+    labels = []
     blob = cv2.dnn.blobFromImage(img, 0.00392, (320, 320), swapRB=True, crop=False)
     model.setInput(blob)
     layerOutputs = model.forward(layer_name)
@@ -44,12 +45,13 @@ def pedestrian_detection(img, model, layer_name, personid):
                 y = int(centerY - (height / 2))
                 boxes.append([x, y, int(width), int(height)])
                 confidences.append(float(confidence))
+                labels.append(classID)
 
     idzs = cv2.dnn.NMSBoxes(boxes, confidences, MIN_CONFIDENCE, NMS_THRESHOLD)
     if len(idzs):
         for i in idzs:
             x, y, w, h = boxes[i]
-            res = (confidences[i], (x, y), (x + w, y + h))
+            res = (confidences[i], (x, y), (x + w, y + h), labels[i])
             results.append(res)
     return results
 
@@ -59,9 +61,7 @@ weights_path = "yolov4-tiny.weights"
 config_path = "yolov4-tiny.cfg"
 
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-out = cv2.VideoWriter('captured.mp4', fourcc, 24, (1280, 720))
-
-cap = cv2.VideoCapture('olya.mp4')
+out = cv2.VideoWriter('captured.mp4', fourcc,30, (1280, 720))
 
 model = cv2.dnn.readNet(config_path, weights_path)
 layer_name = model.getLayerNames()
@@ -83,8 +83,11 @@ while True:
             x1, y1 = res[1]
             x2, y2 = res[2]
             if check_intersection([res[1] + res[2]], zona):
+                cv2.putText(image, '{} {:.0%}'.format(classes[res[3]], res[0]), (x1 + 2, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 255, 0), 1)
                 cv2.rectangle(image, res[1], res[2], (0, 0, 255), 2)
             else:
+                cv2.putText(image, '{} {:.0%}'.format(classes[res[3]], res[0]), (x1 + 2, y1 - 5),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 255, 0), 1)
                 cv2.rectangle(image, res[1], res[2], (0, 255, 0), 2)
     seconds = time.time() - start
     fps = 1 / seconds
