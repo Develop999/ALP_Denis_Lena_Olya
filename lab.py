@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 import time
 
-NMS_THRESHOLD = 0.25
+NMS_THRESHOLD = 0.3
 MIN_CONFIDENCE = 0.5
 zona = np.array([[200, 300, 500, 600]])
 
@@ -79,7 +79,6 @@ while True:
     status, image = cap.read()
     if not status:
         break
-    image = cv2.resize(image, (1280, 720))
     results = pedestrian_detection(image, model, layer_name, classes.index("person"))
     for (x1, y1, x2, y2) in zona:
         cv2.rectangle(image, (x1, y1), (x2, y2), (255, 0, 0), 2)
@@ -89,11 +88,14 @@ while True:
             x2, y2 = res[2]
             label = classes[res[3]]
             if check_intersection([res[1] + res[2]], zona):
+                print(i, "Первая точка:", res[1], " Вторая точка:", res[2], "Попадание")
                 cv2.putText(image, '{}.{} {:.0%}'.format(i, label, res[0]), (x1 + 2, y1 - 5), font, 0.35, green, 1)
                 cv2.rectangle(image, res[1], res[2], red, 2)
             else:
+                print(i, "Первая точка:", res[1], " Вторая точка:", res[2])
                 cv2.putText(image, '{}.{} {:.0%}'.format(i, label, res[0]), (x1 + 2, y1 - 5), font, 0.35, green, 1)
                 cv2.rectangle(image, res[1], res[2], green, 2)
+    print("==============================================================")
     seconds = time.time() - start
     fps = 1 / seconds
     fps = round(fps, 2)
